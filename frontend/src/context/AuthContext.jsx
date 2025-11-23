@@ -10,6 +10,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       fetchUser(token)
+      
+      // Setup auto-refresh every 5 minutes
+      const refreshInterval = setInterval(() => {
+        refreshToken(token)
+      }, 5 * 60 * 1000) // 5 minutes
+
+      return () => clearInterval(refreshInterval)
     } else {
       setLoading(false)
     }
@@ -33,6 +40,35 @@ export const AuthProvider = ({ children }) => {
       logout()
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshToken = async (currentToken) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('token', data.access_token)
+        // We don't use setToken here to avoid triggering the useEffect again
+        // just update the localStorage for the next reload
+        // But wait, if we don't update state, authFetch will use old token?
+        // Yes, we need to update state but avoid infinite loop.
+        // Actually, updating token state WILL trigger useEffect, which is fine, 
+        // it will just set up a new interval and fetch user again.
+        // To be cleaner, we can separate the interval logic.
+        // For now, let's just update the state, it resets the timer which is acceptable.
+        setToken(data.access_token)
+        console.log('Token refreshed automatically')
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error)
+      // Don't logout immediately on refresh fail, maybe just network error
     }
   }
 

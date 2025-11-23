@@ -36,3 +36,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)
 @router.get("/users/me", response_model=schemas.User)
 async def read_users_me(current_user: models.User = Depends(security.get_current_active_user)):
     return current_user
+
+@router.post("/refresh", response_model=schemas.Token)
+async def refresh_token(current_user: models.User = Depends(security.get_current_active_user)):
+    """
+    Refresh the access token for the current user.
+    """
+    access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(
+        data={"sub": current_user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
