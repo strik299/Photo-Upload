@@ -1,0 +1,64 @@
+# Credenciales de Google Drive API
+credentials.json
+token.json
+
+# Variables de entorno (credenciales de APIs)
+.env
+backend/.env
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Archivos temporales
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+venv/
+env/
+
+# Database
+*.db
+*.sqlite3
+
+# Build
+frontend/dist/
+
+# Legacy code
+legacy/ 
