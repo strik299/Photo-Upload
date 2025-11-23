@@ -33,6 +33,9 @@ export default function GatherPhotos({ logs, clearLogs, toast }) {
       
       const response = await fetch('http://localhost:8000/api/photos/gather', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 

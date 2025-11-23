@@ -1,7 +1,7 @@
 """
 API routes for the LEBENGOOD application
 """
-from fastapi import APIRouter, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import json
@@ -512,13 +512,71 @@ async def gather_photos(
         await broadcast_message(f"✓ {carpeta_upper}")
         
         # Create local ZIP folder
-        carpeta_zip_local = "ZIP_TEMP"
-        Path(carpeta_zip_local).mkdir(exist_ok=True)
+        carpeta_zip_local = Path("ZIP_TEMP")
+        if carpeta_zip_local.exists():
+            shutil.rmtree(carpeta_zip_local)
+        carpeta_zip_local.mkdir(parents=True, exist_ok=True)
         
         await broadcast_message("\n🔍 Buscando fotos...")
         
-        # This would implement the full photo gathering logic
-        # For brevity, showing simplified version
+        # 1. Find all images recursively
+        files = await asyncio.to_thread(drive_service.listar_archivos_recursivo, carpeta_id)
+        
+        if not files:
+            await broadcast_message("⚠️ No se encontraron fotos en esta carpeta")
+            return {"success": False, "message": "No se encontraron fotos"}
+            
+        await broadcast_message(f"📸 Se encontraron {len(files)} fotos")
+        
+        # 2. Download files
+        downloaded_files = []
+        for i, file in enumerate(files, 1):
+            await broadcast_message(f"⬇️ Descargando [{i}/{len(files)}]: {file['name']}")
+            
+            success = await asyncio.to_thread(
+                drive_service.descargar_archivo,
+                file['id'],
+                file['name'],
+                str(carpeta_zip_local)
+            )
+            
+            if success:
+                downloaded_files.append(file['name'])
+        
+        if not downloaded_files:
+            raise FileProcessingError("No se pudo descargar ninguna foto")
+            
+        # 3. Create ZIP
+        await broadcast_message("\n📦 Creando archivo ZIP...")
+        zip_filename = f"{carpeta_upper}.zip"
+        zip_path = carpeta_zip_local / zip_filename
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file_name in downloaded_files:
+                file_path = carpeta_zip_local / file_name
+                zipf.write(file_path, file_name)
+        
+        # 4. Upload ZIP
+        await broadcast_message("⬆️ Subiendo ZIP a Drive...")
+        
+        # Check if ZIP already exists and delete it (optional, to avoid duplicates)
+        existing_zip_id = drive_service.buscar_carpeta_por_nombre(zip_filename, carpeta_id)
+        # Note: buscar_carpeta_por_nombre searches for folders, we might need a file search
+        # For now, just upload a new one
+        
+        zip_id = await asyncio.to_thread(
+            drive_service.subir_archivo,
+            str(zip_path),
+            carpeta_id
+        )
+        
+        if zip_id:
+            await broadcast_message("✅ ZIP subido exitosamente")
+        else:
+            raise DriveServiceError("Error al subir el archivo ZIP")
+            
+        # Cleanup
+        shutil.rmtree(carpeta_zip_local)
         
         await broadcast_message("🎉 Proceso completado")
         

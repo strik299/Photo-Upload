@@ -26,30 +26,59 @@ class GoogleDriveService:
         self.creds = None
         self.service = None
         
-        # Check for credentials in environment variable (Production)
-        env_creds = os.getenv('GOOGLE_CREDENTIALS_JSON')
-        if env_creds:
-            try:
+        # 1. Try Service Account (Preferred for Server)
+        # Check env var first, then file
+        try:
+            env_creds = os.getenv('GOOGLE_CREDENTIALS_JSON')
+            if env_creds:
                 creds_dict = json.loads(env_creds)
                 self.creds = service_account.Credentials.from_service_account_info(
                     creds_dict, scopes=SCOPES
                 )
-            except Exception as e:
-                print(f"Error loading credentials from environment: {e}")
-        
-        # Fallback to file (Development)
-        if not self.creds and os.path.exists('credentials.json'):
-            self.creds = service_account.Credentials.from_service_account_file(
-                'credentials.json', scopes=SCOPES
-            )
-            
+            elif os.path.exists('credentials.json'):
+                # Try to load as Service Account first
+                try:
+                    self.creds = service_account.Credentials.from_service_account_file(
+                        'credentials.json', scopes=SCOPES
+                    )
+                except ValueError:
+                    # If it fails (missing fields), it's likely an OAuth Client ID file
+                    # We will handle this in the fallback below
+                    self.creds = None
+        except Exception as e:
+            print(f"Service Account load failed: {e}")
+            self.creds = None
+
+        # 2. Fallback to OAuth User Credentials (Local/Dev)
         if not self.creds:
-            # Try legacy token method if service account fails
+            # Check for existing token
             if os.path.exists(TOKEN_FILE):
-                self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+                try:
+                    self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+                except Exception as e:
+                    print(f"Token file invalid: {e}")
+            
+            # If no valid token, let user log in (if client secrets exist)
+            if not self.creds or not self.creds.valid:
+                if self.creds and self.creds.expired and self.creds.refresh_token:
+                    try:
+                        self.creds.refresh(Request())
+                    except Exception:
+                        self.creds = None
+                
+                if not self.creds and os.path.exists('credentials.json'):
+                    try:
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            'credentials.json', SCOPES)
+                        self.creds = flow.run_local_server(port=0)
+                        # Save the credentials for the next run
+                        with open(TOKEN_FILE, 'w') as token:
+                            token.write(self.creds.to_json())
+                    except Exception as e:
+                        print(f"OAuth flow failed: {e}")
 
         if not self.creds:
-             raise AuthenticationError("No se encontraron credenciales de Google Drive")
+             raise AuthenticationError("No se encontraron credenciales válidas (ni Service Account ni OAuth)")
 
         self.service = build('drive', 'v3', credentials=self.creds)
     
@@ -256,3 +285,35 @@ class GoogleDriveService:
         """Alias for subir_archivo_drive with automatic name extraction"""
         nombre_archivo = Path(ruta_archivo).name
         return self.subir_archivo_drive(ruta_archivo, nombre_archivo, parent_folder_id)
+
+    def listar_archivos_recursivo(self, folder_id: str) -> list:
+        """Recursively list all image files in a folder structure"""
+        if not self.service:
+            return []
+        
+        all_files = []
+        
+        try:
+            # Get all items in current folder
+            query = f"'{folder_id}' in parents and trashed=false"
+            results = self.service.files().list(
+                q=query,
+                fields="files(id, name, mimeType)"
+            ).execute()
+            
+            items = results.get('files', [])
+            
+            for item in items:
+                if item['mimeType'] == 'application/vnd.google-apps.folder':
+                    # Recursively search subfolders
+                    subfolder_files = self.listar_archivos_recursivo(item['id'])
+                    all_files.extend(subfolder_files)
+                elif 'image/' in item['mimeType']:
+                    # Add image files
+                    all_files.append(item)
+                    
+            return all_files
+            
+        except Exception as e:
+            print(f"Error listing files recursively: {e}")
+            return []

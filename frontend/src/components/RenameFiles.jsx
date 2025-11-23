@@ -131,6 +131,9 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
       
       const response = await fetch('http://localhost:8000/api/rename/preview', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 
@@ -216,6 +219,9 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
       
       const response = await fetch('http://localhost:8000/api/rename/process', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 
@@ -258,6 +264,9 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
       
       const response = await fetch('http://localhost:8000/api/rename/process', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 
@@ -338,6 +347,9 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
       
       const response = await fetch('http://localhost:8000/api/rename/process', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 

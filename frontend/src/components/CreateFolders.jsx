@@ -73,6 +73,9 @@ export default function CreateFolders({ logs, clearLogs, toast, availableCountri
       
       const response = await fetch('http://localhost:8000/api/folders/create', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData
       })
 
