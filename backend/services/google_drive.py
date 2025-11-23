@@ -51,8 +51,17 @@ class GoogleDriveService:
 
         # 2. Fallback to OAuth User Credentials (Local/Dev)
         if not self.creds:
-            # Check for existing token
-            if os.path.exists(TOKEN_FILE):
+            # Check for token in environment variable (Production/Render)
+            env_token = os.getenv('GOOGLE_TOKEN_JSON')
+            if env_token:
+                try:
+                    token_dict = json.loads(env_token)
+                    self.creds = Credentials.from_authorized_user_info(token_dict, SCOPES)
+                except Exception as e:
+                    print(f"Error loading token from environment: {e}")
+
+            # Check for existing token file (Local)
+            if not self.creds and os.path.exists(TOKEN_FILE):
                 try:
                     self.creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
                 except Exception as e:
