@@ -14,9 +14,12 @@ from api.routes import router, ws_router
 from auth import models, database
 from auth.routes import router as auth_router
 from utils.exceptions import AppException
+import seed
 
 # Create database tables
 models.Base.metadata.create_all(bind=database.engine)
+# Create initial admin user if not exists
+seed.create_initial_user()
 
 # Configure logging
 logging.basicConfig(
