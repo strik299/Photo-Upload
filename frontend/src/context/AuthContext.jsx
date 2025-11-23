@@ -2,6 +2,10 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
 
+// In production (Render), API is served from same origin
+// In development (Vite), we need to point to localhost:8000
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:8000'
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('token'))
@@ -24,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async (authToken) => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/users/me', {
+      const response = await fetch(`${API_URL}/api/auth/users/me`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -77,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     formData.append('username', username)
     formData.append('password', password)
 
-    const response = await fetch('http://localhost:8000/api/auth/token', {
+    const response = await fetch(`${API_URL}/api/auth/token`, {
       method: 'POST',
       body: formData
     })

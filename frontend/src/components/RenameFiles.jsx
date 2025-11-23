@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 
 import { FileEdit, Package, Tag, Folder, FolderPlus, X, Image as ImageIcon, Rocket, Clock, Info, CheckCircle, AlertTriangle, ArrowLeft, Eye, Upload, Grid, Globe, Check, Search, List } from 'lucide-react'
 
+// In production (Render), API is served from same origin
+// In development (Vite), we need to point to localhost:8000
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:8000';
+
 export default function RenameFiles({ logs, clearLogs, toast, availableCountries = [] }) {
   const [mode, setMode] = useState('folders') // 'folders' or 'direct'
   const [articulo, setArticulo] = useState('')
@@ -129,7 +133,7 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
         })
       })
       
-      const response = await fetch('http://localhost:8000/api/rename/preview', {
+      const response = await fetch(`${API_URL}/api/rename/preview`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -217,7 +221,7 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
         }
       })
       
-      const response = await fetch('http://localhost:8000/api/rename/process', {
+      const response = await fetch(`${API_URL}/api/rename/process`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -262,7 +266,7 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
         })
       })
       
-      const response = await fetch('http://localhost:8000/api/rename/process', {
+      const response = await fetch(`${API_URL}/api/rename/process`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -345,7 +349,7 @@ export default function RenameFiles({ logs, clearLogs, toast, availableCountries
         })
       })
       
-      const response = await fetch('http://localhost:8000/api/rename/process', {
+      const response = await fetch(`${API_URL}/api/rename/process`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

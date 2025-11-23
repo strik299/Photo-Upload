@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import './styles/index.css'
+// In production (Render), API is served from same origin
+// In development (Vite), we need to point to localhost:8000
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:8000'
 import RenameFiles from './components/RenameFiles'
 import CreateFolders from './components/CreateFolders'
 import GatherPhotos from './components/GatherPhotos'
@@ -26,7 +29,7 @@ function App() {
 
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/folders/countries', {
+        const response = await fetch(`${API_URL}/api/folders/countries`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         const data = await response.json()

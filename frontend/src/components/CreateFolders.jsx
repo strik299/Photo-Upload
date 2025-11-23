@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 
 import { FolderPlus, Package, Palette, Plus, List, X, Info, Rocket, Clock, Check, Search } from 'lucide-react'
 
+// In production (Render), API is served from same origin
+// In development (Vite), we need to point to localhost:8000
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:8000'
+
 export default function CreateFolders({ logs, clearLogs, toast, availableCountries = [] }) {
   const [nombreCarpeta, setNombreCarpeta] = useState('')
   const [selectedCountries, setSelectedCountries] = useState([])
@@ -71,7 +75,7 @@ export default function CreateFolders({ logs, clearLogs, toast, availableCountri
       formData.append('nombre_carpeta', nombreCarpeta)
       formData.append('paises', selectedCountries.join(','))
       
-      const response = await fetch('http://localhost:8000/api/folders/create', {
+      const response = await fetch(`${API_URL}/api/folders/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

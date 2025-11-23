@@ -2,6 +2,10 @@ import { useState } from 'react'
 
 import { Image, Globe, Folder, Lightbulb, Repeat, Rocket, Clock, Trash2, Info } from 'lucide-react'
 
+// In production (Render), API is served from same origin
+// In development (Vite), we need to point to localhost:8000
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:8000'
+
 export default function GatherPhotos({ logs, clearLogs, toast }) {
   const [pais, setPais] = useState('')
   const [carpeta, setCarpeta] = useState('')
@@ -31,7 +35,7 @@ export default function GatherPhotos({ logs, clearLogs, toast }) {
       formData.append('pais', pais)
       formData.append('carpeta', carpeta)
       
-      const response = await fetch('http://localhost:8000/api/photos/gather', {
+      const response = await fetch(`${API_URL}/api/photos/gather`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
