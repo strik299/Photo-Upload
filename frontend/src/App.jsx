@@ -50,7 +50,12 @@ function App() {
     let isInitialConnection = true
     
     const connectWebSocket = () => {
-      const ws = new WebSocket('ws://localhost:8000/api/ws')
+      // Determine WebSocket protocol (ws or wss) and host
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = import.meta.env.PROD ? window.location.host : 'localhost:8000'
+    const wsUrl = `${protocol}//${host}/api/ws`
+
+    const ws = new WebSocket(wsUrl)
       
       ws.onopen = () => {
         console.log('WebSocket connected')
