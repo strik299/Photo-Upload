@@ -387,6 +387,9 @@ async def get_countries():
         }
         
     except Exception as e:
+        import traceback
+        print(f"❌ Error in get_countries: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
