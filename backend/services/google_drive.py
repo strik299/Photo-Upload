@@ -107,9 +107,7 @@ class GoogleDriveService:
             
             results = self.service.files().list(
                 q=query,
-                fields="files(id, name)",
-                includeItemsFromAllDrives=True,
-                supportsAllDrives=True
+                fields="files(id, name)"
             ).execute()
             
             items = results.get('files', [])
@@ -136,8 +134,7 @@ class GoogleDriveService:
             
             folder = self.service.files().create(
                 body=folder_metadata,
-                fields='id',
-                supportsAllDrives=True
+                fields='id'
             ).execute()
             
             return folder.get('id')
@@ -179,13 +176,14 @@ class GoogleDriveService:
             file = self.service.files().create(
                 body=file_metadata,
                 media_body=media,
-                fields='id',
-                supportsAllDrives=True
+                fields='id'
             ).execute()
             
             return file.get('id')
         except Exception as e:
-            print(f"Error uploading {nombre_archivo}: {e}")
+            import traceback
+            print(f"❌ Error uploading {nombre_archivo}: {e}")
+            traceback.print_exc()
             return None
     
     def subir_zip_desde_memoria(self, zip_buffer, nombre_zip: str, parent_folder_id: str = None) -> tuple:
