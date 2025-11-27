@@ -181,7 +181,9 @@ class GoogleDriveService:
             
             return file.get('id')
         except Exception as e:
+            import traceback
             print(f"Error uploading {nombre_archivo}: {e}")
+            traceback.print_exc()
             return None
     
     def subir_zip_desde_memoria(self, zip_buffer, nombre_zip: str, parent_folder_id: str = None) -> tuple:
