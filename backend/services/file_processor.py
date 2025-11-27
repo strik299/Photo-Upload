@@ -159,13 +159,14 @@ class FileProcessor:
         """Initialize with Google Drive service"""
         self.drive_service = google_drive_service
     
-    def process_folder(self, carpeta_path: str, articulo: str, lista_codigos: List[str], broadcast_callback=None) -> dict:
+    def process_folder(self, carpeta_path: str, articulo: str, lista_codigos: List[str], broadcast_callback=None, loop=None) -> dict:
         """
         Process a folder with file renaming and upload to Google Drive
         Replicates the logic from the original tkinter script
         """
         from utils.helpers import extraer_pais_de_ruta, extraer_color_de_nombre, transformar_nombre_carpeta, validar_formato_pt
         import tempfile
+        import asyncio
         
         carpeta = Path(carpeta_path)
         carpeta_nombre = carpeta.name
@@ -173,17 +174,11 @@ class FileProcessor:
         def log(message):
             """Helper to log messages"""
             print(message)
-            if broadcast_callback:
-                # Since broadcast_callback might be async, we need to handle it
-                import asyncio
+            if broadcast_callback and loop:
                 try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        asyncio.create_task(broadcast_callback(message))
-                    else:
-                        loop.run_until_complete(broadcast_callback(message))
-                except:
-                    pass  # If async doesn't work, just print
+                    asyncio.run_coroutine_threadsafe(broadcast_callback(message), loop)
+                except Exception as e:
+                    print(f"Error broadcasting message: {e}")
         
         if not carpeta.exists():
             return {'carpeta': carpeta_nombre, 'exito': False, 'error': f"La carpeta '{carpeta_path}' no existe"}

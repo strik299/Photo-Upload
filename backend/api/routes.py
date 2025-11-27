@@ -312,12 +312,14 @@ async def process_rename(
                     
                     # Use FileProcessor to process this folder
                     processor = FileProcessor(drive_service)
+                    loop = asyncio.get_running_loop()
                     result = await asyncio.to_thread(
                         processor.process_folder,
                         str(folder_path),
                         articulo_upper,
                         lista_codigos,
-                        broadcast_message
+                        broadcast_message,
+                        loop
                     )
                     
                     results.append(result)
