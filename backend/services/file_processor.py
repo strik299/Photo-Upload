@@ -256,8 +256,9 @@ class FileProcessor:
                         file_id = self.drive_service.subir_archivo(str(archivo_procesado), carpeta_destino_id)
                         if file_id:
                             archivos_subidos += 1
+                            log(f"   ✅ Subido: {archivo_procesado.name} (ID: {file_id})")
                         else:
-                            log(f"   ❌ Falló la subida de {archivo_procesado.name} (ID nulo)")
+                            log(f"   ❌ Falló subida: {archivo_procesado.name} (No ID returned)")
                     except Exception as e:
                         log(f"   ❌ Error subiendo {archivo_procesado.name}: {e}")
             
